@@ -2,7 +2,14 @@
 {% block title %}Zonas de Coquimbo{% endblock %}
 {% block content %}
 <div class="mt-4 mb-5">
-    <h2 class="mb-4">Zonas Destacadas de la Región</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Zonas Destacadas de la Región</h2>
+        <div>
+            <a href="#" class="btn btn-outline-secondary me-2">Buscar</a>
+            <a href="#" class="btn btn-success">Agregar</a>
+        </div>
+    </div>
+
     <div class="list-group">
         {% for zona in zonas %}
             <div class="list-group-item list-group-item-action py-3">
@@ -11,6 +18,10 @@
                     <span class="badge bg-secondary">Demanda: {{ zona.nivel_demanda }}</span>
                 </div>
                 <p class="mb-1 text-muted">{{ zona.destacado }}</p>
+                <div class="mt-2">
+                    <a href="#" class="btn btn-sm btn-outline-warning me-1">Modificar</a>
+                    <a href="#" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                </div>
             </div>
         {% endfor %}
     </div>

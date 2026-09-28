@@ -1,13 +1,8 @@
-import json
-import os
 from django.shortcuts import render
-from django.conf import settings
+from .models import Zona
 
 def lista_zonas(request):
-    ruta_archivo = os.path.join(settings.BASE_DIR, 'data', 'zonas.json')
-    with open(ruta_archivo, 'r', encoding='utf-8') as archivo:
-        datos_zonas = json.load(archivo)
-
+    datos_zonas = Zona.objects.all()
     contexto = {
         'zonas': datos_zonas
     }
