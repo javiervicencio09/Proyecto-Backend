@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Catálogo de Propiedades{% endblock %}
+
+{% block content %}
+<div class="mt-4 mb-5">
+    <h2 class="mb-4">Catálogo de Propiedades</h2>
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for propiedad in propiedades %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ propiedad.titulo }}</h5>
+                        <span class="badge bg-primary mb-3">{{ propiedad.tipo }}</span>
+                        <p class="card-text fw-bold fs-5 text-success">{{ propiedad.precio }}</p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a href="{% url 'propiedades:detalle' propiedad.id %}" class="btn btn-outline-primary w-100">Ver detalles</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-warning text-center" role="alert">
+                    En este momento no hay propiedades disponibles en el catálogo.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

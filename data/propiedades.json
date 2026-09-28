@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "titulo": "Casa Moderna en La Serena",
+        "tipo": "Casa",
+        "precio": "4.500 UF",
+        "habitaciones": 3,
+        "banos": 2,
+        "descripcion": "Hermosa casa ubicada en un barrio residencial tranquilo, cerca de colegios y supermercados."
+    },
+    {
+        "id": 2,
+        "titulo": "Departamento con vista al mar",
+        "tipo": "Departamento",
+        "precio": "3.200 UF",
+        "habitaciones": 2,
+        "banos": 1,
+        "descripcion": "Acogedor departamento en la Avenida del Mar, Coquimbo. Ideal para inversión o descanso."
+    },
+    {
+        "id": 3,
+        "titulo": "Parcela en el Valle del Elqui",
+        "tipo": "Terreno",
+        "precio": "2.100 UF",
+        "habitaciones": 0,
+        "banos": 0,
+        "descripcion": "Amplio terreno de 5000m2 con derechos de agua y factibilidad eléctrica."
+    }
+]

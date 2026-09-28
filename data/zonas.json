@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "nombre": "La Serena Centro",
+        "destacado": "Zona histórica y comercial",
+        "nivel_demanda": "Alta"
+    },
+    {
+        "id": 2,
+        "nombre": "Avenida del Mar (Coquimbo)",
+        "destacado": "Turismo y gastronomía",
+        "nivel_demanda": "Muy Alta"
+    },
+    {
+        "id": 3,
+        "nombre": "Valle del zapa",
+        "destacado": "Naturaleza y tranquilidad",
+        "nivel_demanda": "Media"
+    }
+]

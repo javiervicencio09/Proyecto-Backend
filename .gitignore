@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+entorno/
+.venv/
+venv/
+
+# Local database and environment variables
+*.sqlite3
+.env
+.env.*
+!.env.example
+
+# Generated files and editor settings
+staticfiles/
+media/
+.vscode/
+.idea/
+.pytest_cache/

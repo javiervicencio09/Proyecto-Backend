@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Portal Inmobiliario Coquimbo{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 shadow-sm text-center mt-4">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold text-primary">Portal Inmobiliario Coquimbo</h1>
+        <p class="col-md-8 fs-4 mx-auto text-muted">Descubre las mejores opciones de casas, departamentos y terrenos en la región.</p>
+        <div class="mt-4">
+            <a href="{% url 'propiedades:lista' %}" class="btn btn-primary btn-lg me-2">Ver Propiedades</a>
+            <a href="{% url 'zonas:lista' %}" class="btn btn-outline-secondary btn-lg">Explorar Zonas</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

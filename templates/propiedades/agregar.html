@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Nueva Propiedad{% endblock %}
+
+{% block content %}
+<div class="row my-5">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow border-0 p-4">
+            <h2 class="mb-4 text-primary fw-bold">Registrar Nueva Propiedad</h2>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success w-100 mt-3">Guardar Propiedad</button>
+            </form>
+            <div class="mt-3 text-center">
+                <a href="{% url 'propiedades:lista' %}" class="text-decoration-none">&larr; Volver al Catálogo</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
