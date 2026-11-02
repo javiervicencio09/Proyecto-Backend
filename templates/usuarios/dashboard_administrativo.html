@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel Administrativo - Portal Inmobiliario{% endblock %}
+
+{% block header %}
+<div class="bg-secondary text-white py-4 mb-4 shadow-sm">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-light text-dark mb-1">Perfil: Administrativo</span>
+                <h1 class="h3 fw-bold mb-0">Panel de Operaciones Diarias</h1>
+                <p class="text-white-50 mb-0">Bienvenido, {{ request.user.username }}. Registro de información y atención de consultas.</p>
+            </div>
+            <div>
+                <span class="badge bg-dark text-white p-2">Permisos Operativos Asignados</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="alert alert-info shadow-sm" role="alert">
+    ℹ️ <strong>Nota de Seguridad:</strong> Tu perfil cuenta con permisos operativos limitados. No tienes autorización para eliminar registros ni gestionar usuarios o configuraciones críticas del sistema.
+</div>
+
+<!-- Funcionalidades Asignadas -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0 fw-bold text-dark">📌 Tareas y Funcionalidades Asignadas</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white text-center shadow-sm">
+                    <h6 class="fw-bold">Consulta de Propiedades</h6>
+                    <p class="small text-muted mb-2">Búsqueda y consulta de fichas para clientes.</p>
+                    <a href="{% url 'propiedades:lista' %}" class="btn btn-sm btn-primary w-100">Consultar Catálogo</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white text-center shadow-sm">
+                    <h6 class="fw-bold">Ingreso de Propiedad</h6>
+                    <p class="small text-muted mb-2">Registrar una nueva propiedad para revisión.</p>
+                    <a href="{% url 'propiedades:agregar' %}" class="btn btn-sm btn-success w-100">Nueva Propiedad</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white text-center shadow-sm">
+                    <h6 class="fw-bold">Registro de Visitas / Citas</h6>
+                    <p class="small text-muted mb-2">Tomar solicitudes de interesados en propiedades.</p>
+                    <a href="#" class="btn btn-sm btn-warning w-100 text-dark fw-bold">Registrar Visita</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Catálogo reciente disponible para consulta -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold text-dark">🏠 Propiedades Recientes para Consulta</h5>
+        <a href="{% url 'propiedades:lista' %}" class="btn btn-sm btn-outline-secondary">Ver Catálogo Completo</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Precio</th>
+                    <th>Zona</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in ultimas_propiedades %}
+                <tr>
+                    <td class="fw-semibold">{{ p.titulo }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ p.tipo }}</span></td>
+                    <td class="text-success fw-bold">{{ p.precio }}</td>
+                    <td>{{ p.zona.nombre|default:"Sin zona" }}</td>
+                    <td>
+                        <a href="{% url 'propiedades:detalle' p.id %}" class="btn btn-sm btn-outline-primary">Ver Ficha</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No hay propiedades registradas aún.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

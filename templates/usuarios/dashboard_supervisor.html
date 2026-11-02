@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel Supervisor - Portal Inmobiliario{% endblock %}
+
+{% block header %}
+<div class="bg-primary text-white py-4 mb-4 shadow-sm">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-warning text-dark mb-1">Perfil: Supervisor</span>
+                <h1 class="h3 fw-bold mb-0">Panel de Control Operacional</h1>
+                <p class="text-white-50 mb-0">Bienvenido, {{ request.user.username }}. Supervisión de catálogo y operaciones inmobiliarias.</p>
+            </div>
+            <div>
+                <span class="badge bg-light text-primary p-2">Permisos Intermedios</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Métrica Propiedades -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-start border-primary border-4">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Propiedades Supervisadas</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="display-6 fw-bold text-primary">{{ total_propiedades }}</span>
+                    <a href="{% url 'propiedades:lista' %}" class="btn btn-sm btn-outline-primary">Ver Catálogo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Métrica Zonas -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-start border-success border-4">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Zonas Operativas</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="display-6 fw-bold text-success">{{ total_zonas }}</span>
+                    <a href="{% url 'zonas:lista' %}" class="btn btn-sm btn-outline-success">Ver Zonas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mantenedores y Transacciones Autorizadas -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0 fw-bold text-dark">📋 Mantenedores y Transacciones Autorizadas</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white text-center shadow-sm">
+                    <h6 class="fw-bold">Mantenedor de Propiedades</h6>
+                    <p class="small text-muted mb-2">Crear, listar, editar propiedades autorizadas.</p>
+                    <a href="{% url 'propiedades:lista' %}" class="btn btn-sm btn-primary w-100 mb-1">Listar Propiedades</a>
+                    <a href="{% url 'propiedades:agregar' %}" class="btn btn-sm btn-outline-primary w-100">Registrar Propiedad</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white text-center shadow-sm">
+                    <h6 class="fw-bold">Mantenedor de Zonas</h6>
+                    <p class="small text-muted mb-2">Supervisión de zonas geográficas y demanda.</p>
+                    <a href="{% url 'zonas:lista' %}" class="btn btn-sm btn-success w-100">Ver Zonas</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 border rounded bg-white text-center shadow-sm">
+                    <h6 class="fw-bold">Transacciones Operacionales</h6>
+                    <p class="small text-muted mb-2">Aprobación y revisión de reservas / visitas.</p>
+                    <a href="#" class="btn btn-sm btn-warning w-100 text-dark fw-bold">Gestionar Visitas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen Operacional de Zonas -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0 fw-bold text-dark">📍 Estado Operacional por Zonas</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Zona</th>
+                    <th>Destacado</th>
+                    <th>Nivel de Demanda</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for z in zonas %}
+                <tr>
+                    <td class="fw-semibold">{{ z.nombre }}</td>
+                    <td>{{ z.destacado }}</td>
+                    <td>
+                        <span class="badge {% if z.nivel_demanda == 'Alta' %}bg-danger{% elif z.nivel_demanda == 'Media' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                            {{ z.nivel_demanda }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted">No hay zonas registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

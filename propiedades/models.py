@@ -9,7 +9,6 @@ class Propiedad(models.Model):
     banos = models.IntegerField()
     descripcion = models.TextField()
     
-    # Agregamos la relación (ForeignKey) para cumplir con la rúbrica
     zona = models.ForeignKey(Zona, on_delete=models.SET_NULL, null=True, blank=True, related_name='propiedades')
 
     def __str__(self):

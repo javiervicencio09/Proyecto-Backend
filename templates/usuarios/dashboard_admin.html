@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel Administrador - Portal Inmobiliario{% endblock %}
+
+{% block header %}
+<div class="bg-dark text-white py-4 mb-4 shadow-sm">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-danger mb-1">Perfil: Administrador</span>
+                <h1 class="h3 fw-bold mb-0">Panel de Control Global</h1>
+                <p class="text-white-50 mb-0">Bienvenido, {{ request.user.username }}. Control total sobre el sistema.</p>
+            </div>
+            <div>
+                <span class="badge bg-light text-dark p-2">Acceso Total</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Métrica 1 -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-start border-primary border-4">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Total Propiedades</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="display-6 fw-bold text-primary">{{ total_propiedades }}</span>
+                    <a href="{% url 'propiedades:lista' %}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Métrica 2 -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-start border-success border-4">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Total Zonas</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="display-6 fw-bold text-success">{{ total_zonas }}</span>
+                    <a href="{% url 'zonas:lista' %}" class="btn btn-sm btn-outline-success">Ver todas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Métrica 3 -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-start border-warning border-4">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-2">Usuarios Registrados</h6>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="display-6 fw-bold text-warning">{{ total_usuarios }}</span>
+                    <span class="badge bg-secondary">Gestión de Cuentas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones de Administración y Mantenedores -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">🛠️ Gestión de Mantenedores y Operaciones</h5>
+        <span class="badge bg-light text-primary">Acceso Global</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 border rounded bg-light text-center">
+                    <h6 class="fw-bold">Mantenedor Propiedades</h6>
+                    <p class="small text-muted mb-2">Crear, listar, editar y eliminar propiedades.</p>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{% url 'propiedades:lista' %}" class="btn btn-sm btn-primary mb-1">Listar / Buscar</a>
+                        <a href="{% url 'propiedades:agregar' %}" class="btn btn-sm btn-outline-primary">Agregar Nueva</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 border rounded bg-light text-center">
+                    <h6 class="fw-bold">Mantenedor Zonas</h6>
+                    <p class="small text-muted mb-2">Crear, listar, editar y eliminar zonas.</p>
+                    <div class="btn-group-vertical w-100">
+                        <a href="{% url 'zonas:lista' %}" class="btn btn-sm btn-success mb-1">Listar Zonas</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 border rounded bg-light text-center">
+                    <h6 class="fw-bold">Transacciones</h6>
+                    <p class="small text-muted mb-2">Gestión y control de reservas y visitas.</p>
+                    <a href="#" class="btn btn-sm btn-warning w-100 text-dark fw-bold">Ver Transacciones</a>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 border rounded bg-light text-center">
+                    <h6 class="fw-bold">Gestión de Usuarios</h6>
+                    <p class="small text-muted mb-2">Crear usuarios y asignar perfiles/roles.</p>
+                    <a href="#" class="btn btn-sm btn-dark w-100">Administrar Usuarios</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Listado rápido de usuarios del sistema -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0 fw-bold">👥 Cuentas de Usuario y Perfiles Asignados</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Perfil / Grupo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td><strong>{{ u.username }}</strong> {% if u.is_superuser %}<span class="badge bg-danger">Superadmin</span>{% endif %}</td>
+                    <td>{{ u.email|default:"Sin email" }}</td>
+                    <td>
+                        {% for g in u.groups.all %}
+                            <span class="badge bg-info text-dark">{{ g.name }}</span>
+                        {% empty %}
+                            {% if not u.is_superuser %}
+                                <span class="badge bg-secondary">Sin Rol</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
