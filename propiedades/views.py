@@ -2,8 +2,8 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from .models import Propiedad
-from .forms import PropiedadForm
+from .models import Propiedad, ReservaVisita
+from .forms import PropiedadForm, ReservaVisitaForm, CambiarEstadoVisitaForm
 from zonas.models import Zona
 from usuarios.decoradores import supervisor_requerido, administrativo_requerido
 
@@ -97,3 +97,80 @@ def eliminar_propiedad(request, id_propiedad):
         return redirect('propiedades:lista')
 
     return render(request, 'propiedades/eliminar.html', {'propiedad': propiedad})
+
+# ==========================================
+# TRANSACCIÓN OPERACIONAL: RESERVAS DE VISITAS
+# ==========================================
+
+@administrativo_requerido
+def lista_visitas(request):
+    query = request.GET.get('q', '').strip()
+    estado = request.GET.get('estado', '').strip()
+
+    visitas = ReservaVisita.objects.select_related('propiedad', 'creado_por').all()
+
+    if query:
+        visitas = visitas.filter(
+            Q(cliente_nombre__icontains=query) |
+            Q(cliente_email__icontains=query) |
+            Q(propiedad__titulo__icontains=query)
+        )
+
+    if estado:
+        visitas = visitas.filter(estado=estado)
+
+    contexto = {
+        'visitas': visitas,
+        'q': query,
+        'estado_seleccionado': estado,
+        'total_visitas': visitas.count(),
+        'cambiar_estado_form': CambiarEstadoVisitaForm(),
+    }
+    return render(request, 'propiedades/visitas_lista.html', contexto)
+
+@administrativo_requerido
+def crear_visita(request, id_propiedad=None):
+    propiedad_inicial = None
+    if id_propiedad:
+        propiedad_inicial = get_object_or_404(Propiedad, id=id_propiedad)
+
+    if request.method == 'POST':
+        form = ReservaVisitaForm(request.POST)
+        if form.is_valid():
+            visita = form.save(commit=False)
+            visita.creado_por = request.user
+            visita.save()
+            messages.success(
+                request,
+                f"¡Reserva de visita #{visita.id} registrada con éxito para {visita.cliente_nombre}!"
+            )
+            return redirect('propiedades:lista_visitas')
+        else:
+            messages.error(request, "Por favor revisa las validaciones de la visita.")
+    else:
+        initial = {}
+        if propiedad_inicial:
+            initial['propiedad'] = propiedad_inicial
+        form = ReservaVisitaForm(initial=initial)
+
+    return render(request, 'propiedades/visitas_crear.html', {
+        'form': form,
+        'propiedad_inicial': propiedad_inicial,
+    })
+
+@supervisor_requerido
+def cambiar_estado_visita(request, id_visita):
+    visita = get_object_or_404(ReservaVisita, id=id_visita)
+
+    if request.method == 'POST':
+        form = CambiarEstadoVisitaForm(request.POST, instance=visita)
+        if form.is_valid():
+            visita_guardada = form.save()
+            messages.success(
+                request,
+                f"El estado de la visita #{visita_guardada.id} fue actualizado a '{visita_guardada.estado}'."
+            )
+        else:
+            messages.error(request, "No se pudo actualizar el estado de la visita.")
+
+    return redirect('propiedades:lista_visitas')

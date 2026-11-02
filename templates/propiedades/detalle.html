@@ -43,9 +43,14 @@
                     {% endif %}
 
                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top flex-wrap gap-2">
-                        <a href="{% url 'propiedades:lista' %}" class="btn btn-outline-secondary">
-                            &larr; Volver al Catálogo
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'propiedades:lista' %}" class="btn btn-outline-secondary">
+                                &larr; Volver al Catálogo
+                            </a>
+                            <a href="{% url 'propiedades:agendar_visita_propiedad' propiedad.id %}" class="btn btn-success fw-bold">
+                                📅 Agendar Visita
+                            </a>
+                        </div>
                         {% if es_supervisor %}
                         <div class="btn-group">
                             <a href="{% url 'propiedades:editar' propiedad.id %}" class="btn btn-warning text-dark fw-bold">

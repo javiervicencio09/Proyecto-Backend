@@ -1,7 +1,8 @@
+from datetime import date, timedelta
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User, Group
-from propiedades.models import Propiedad
+from propiedades.models import Propiedad, ReservaVisita
 from zonas.models import Zona
 
 class PropiedadesCRUDTestCase(TestCase):
@@ -88,7 +89,6 @@ class PropiedadesCRUDTestCase(TestCase):
         self.assertEqual(self.propiedad.habitaciones, 4)
 
     def test_eliminar_propiedad_restringido_para_administrativo(self):
-        # Un administrativo NO tiene permisos para eliminar propiedades
         self.client.login(username='adminis_test', password='password123')
         response = self.client.post(reverse('propiedades:eliminar', args=[self.propiedad.id]), follow=True)
         self.assertTrue(Propiedad.objects.filter(id=self.propiedad.id).exists())
@@ -99,3 +99,56 @@ class PropiedadesCRUDTestCase(TestCase):
         response = self.client.post(reverse('propiedades:eliminar', args=[self.propiedad.id]), follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Propiedad.objects.filter(id=self.propiedad.id).exists())
+
+    # --- Pruebas de Transacción Operacional (Visitas / Reservas) ---
+    def test_crear_reserva_visita_exitosa(self):
+        self.client.login(username='adminis_test', password='password123')
+        fecha_futura = date.today() + timedelta(days=2)
+        data = {
+            'propiedad': self.propiedad.id,
+            'cliente_nombre': 'Carlos Tapia',
+            'cliente_email': 'carlos@ejemplo.cl',
+            'cliente_telefono': '+56987654321',
+            'fecha_visita': fecha_futura.isoformat(),
+            'hora_visita': '15:30',
+            'comentarios': 'Interesado en coordinar crédito hipotecario.',
+        }
+        response = self.client.post(reverse('propiedades:crear_visita'), data, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(ReservaVisita.objects.filter(cliente_nombre='Carlos Tapia').exists())
+
+    def test_validacion_fecha_pasada_en_visita(self):
+        self.client.login(username='adminis_test', password='password123')
+        fecha_pasada = date.today() - timedelta(days=2)
+        data = {
+            'propiedad': self.propiedad.id,
+            'cliente_nombre': 'Carlos Tapia',
+            'cliente_email': 'carlos@ejemplo.cl',
+            'cliente_telefono': '+56987654321',
+            'fecha_visita': fecha_pasada.isoformat(),
+            'hora_visita': '15:30',
+        }
+        response = self.client.post(reverse('propiedades:crear_visita'), data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'La fecha de visita no puede ser anterior a hoy.')
+        self.assertFalse(ReservaVisita.objects.filter(cliente_nombre='Carlos Tapia').exists())
+
+    def test_supervisor_puede_cambiar_estado_visita(self):
+        visita = ReservaVisita.objects.create(
+            propiedad=self.propiedad,
+            cliente_nombre='Ana Rojas',
+            cliente_email='ana@ejemplo.cl',
+            cliente_telefono='+56911223344',
+            fecha_visita=date.today() + timedelta(days=3),
+            hora_visita='11:00',
+            estado='Pendiente'
+        )
+        self.client.login(username='super_test', password='password123')
+        response = self.client.post(
+            reverse('propiedades:cambiar_estado_visita', args=[visita.id]),
+            {'estado': 'Confirmada'},
+            follow=True
+        )
+        self.assertEqual(response.status_code, 200)
+        visita.refresh_from_db()
+        self.assertEqual(visita.estado, 'Confirmada')
