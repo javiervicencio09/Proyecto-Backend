@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Zona - Inmobiliaria Coquimbo{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow-sm border-danger border-2">
+            <div class="card-header bg-danger text-white py-3">
+                <h4 class="mb-0 fw-bold">⚠️ Confirmar Eliminación de Zona</h4>
+            </div>
+            <div class="card-body p-4 text-center">
+                <p class="fs-5 text-dark mb-2">
+                    ¿Estás seguro de que deseas eliminar la zona <strong>{{ zona.nombre }}</strong>?
+                </p>
+                <div class="alert alert-light border my-3 text-start">
+                    <p class="mb-1 text-muted"><strong>Destacado:</strong> {{ zona.destacado }}</p>
+                    <p class="mb-1 text-muted"><strong>Nivel de Demanda:</strong> {{ zona.nivel_demanda }}</p>
+                    <p class="mb-0 text-muted"><strong>Propiedades vinculadas:</strong> {{ zona.total_propiedades }} propiedades</p>
+                </div>
+
+                {% if zona.total_propiedades > 0 %}
+                <div class="alert alert-warning small text-start">
+                    ⚠️ <strong>Advertencia:</strong> Hay {{ zona.total_propiedades }} propiedades asociadas a esta zona. Al eliminar la zona, dichas propiedades quedarán sin zona asignada (`null`).
+                </div>
+                {% endif %}
+
+                <p class="small text-danger mb-4">
+                    Esta acción no se puede deshacer.
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'zonas:lista' %}" class="btn btn-secondary px-4">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger px-4 fw-bold">
+                            Sí, Eliminar Zona
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

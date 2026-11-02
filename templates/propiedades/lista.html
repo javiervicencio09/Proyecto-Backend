@@ -1,39 +1,127 @@
 {% extends 'base.html' %}
 
-{% block title %}Catálogo de Propiedades{% endblock %}
+{% block title %}Catálogo de Propiedades - Inmobiliaria Coquimbo{% endblock %}
 
-{% block content %}
-<div class="mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Catálogo de Propiedades</h2>
-        <div>
-            <a href="#" class="btn btn-outline-secondary me-2">Buscar</a>
-            <a href="{% url 'propiedades:agregar' %}" class="btn btn-success">Agregar</a>
+{% block header %}
+<div class="bg-primary text-white py-4 mb-4 shadow-sm">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Catálogo de Propiedades</h1>
+                <p class="text-white-50 mb-0">Explora o busca propiedades disponibles en la región.</p>
+            </div>
+            {% if es_administrativo %}
+            <div>
+                <a href="{% url 'propiedades:agregar' %}" class="btn btn-light text-primary fw-bold">
+                    ➕ Nueva Propiedad
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
-    
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="mb-5">
+
+    <!-- Barra de Búsqueda y Filtros -->
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body p-4">
+            <form method="GET" action="{% url 'propiedades:lista' %}" class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold small text-muted">Búsqueda por texto</label>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por título, descripción..." value="{{ q }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small text-muted">Tipo de Propiedad</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        <option value="Casa" {% if tipo_seleccionado == 'Casa' %}selected{% endif %}>Casa</option>
+                        <option value="Departamento" {% if tipo_seleccionado == 'Departamento' %}selected{% endif %}>Departamento</option>
+                        <option value="Terreno / Parcela" {% if tipo_seleccionado == 'Terreno / Parcela' %}selected{% endif %}>Terreno / Parcela</option>
+                        <option value="Oficina / Comercial" {% if tipo_seleccionado == 'Oficina / Comercial' %}selected{% endif %}>Oficina / Comercial</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small text-muted">Zona</label>
+                    <select name="zona" class="form-select">
+                        <option value="">Todas</option>
+                        {% for z in zonas %}
+                            <option value="{{ z.id }}" {% if zona_seleccionada == z.id %}selected{% endif %}>{{ z.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                        🔍 Buscar
+                    </button>
+                    {% if q or tipo_seleccionado or zona_seleccionada %}
+                        <a href="{% url 'propiedades:lista' %}" class="btn btn-outline-secondary" title="Limpiar filtros">
+                            ✕
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Indicador de Resultados -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">
+            Mostrando <strong>{{ total_resultados }}</strong> propiedades encontradas
+            {% if q %} para <em>"{{ q }}"</em>{% endif %}
+        </span>
+    </div>
+
+    <!-- Grilla de Propiedades -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for propiedad in propiedades %}
             <div class="col">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm border-0">
                     <div class="card-body">
-                        <h5 class="card-title">{{ propiedad.titulo }}</h5>
-                        <span class="badge bg-primary mb-3">{{ propiedad.tipo }}</span>
-                        <p class="card-text fw-bold fs-5 text-success">{{ propiedad.precio }}</p>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-primary">{{ propiedad.tipo }}</span>
+                            {% if propiedad.zona %}
+                                <span class="badge bg-secondary">{{ propiedad.zona.nombre }}</span>
+                            {% endif %}
+                        </div>
+                        <h5 class="card-title fw-bold text-dark mb-2">{{ propiedad.titulo }}</h5>
+                        <p class="card-text text-muted small line-clamp-2 mb-3">
+                            {{ propiedad.descripcion|truncatewords:20 }}
+                        </p>
+                        <h4 class="card-text fw-bold text-success mb-3">{{ propiedad.precio }}</h4>
+                        
+                        <div class="d-flex gap-3 text-muted small border-top pt-2">
+                            <span>🛏️ {{ propiedad.habitaciones }} Hab.</span>
+                            <span>🚿 {{ propiedad.banos }} Baños</span>
+                        </div>
                     </div>
-                    <div class="card-footer bg-white border-top-0 d-flex flex-column gap-2">
-                        <a href="{% url 'propiedades:detalle' propiedad.id %}" class="btn btn-outline-primary w-100">Ver detalles</a>
-                        <div class="d-flex gap-2">
-                            <a href="#" class="btn btn-outline-warning w-50">Modificar</a>
-                            <a href="#" class="btn btn-outline-danger w-50">Eliminar</a>
+                    <div class="card-footer bg-light border-0 pt-0 pb-3">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'propiedades:detalle' propiedad.id %}" class="btn btn-outline-primary btn-sm">
+                                Ver Ficha Completa
+                            </a>
+                            {% if es_supervisor %}
+                            <div class="btn-group w-100">
+                                <a href="{% url 'propiedades:editar' propiedad.id %}" class="btn btn-outline-warning btn-sm">
+                                    ✏️ Modificar
+                                </a>
+                                <a href="{% url 'propiedades:eliminar' propiedad.id %}" class="btn btn-outline-danger btn-sm">
+                                    🗑️ Eliminar
+                                </a>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-warning text-center" role="alert">
-                    En este momento no hay propiedades disponibles en el catálogo.
+                <div class="alert alert-warning text-center py-5 shadow-sm" role="alert">
+                    <h4 class="alert-heading fw-bold">No se encontraron propiedades</h4>
+                    <p class="text-muted mb-3">No hay registros que coincidan con los criterios de búsqueda seleccionados.</p>
+                    <a href="{% url 'propiedades:lista' %}" class="btn btn-outline-primary">Ver todas las propiedades</a>
                 </div>
             </div>
         {% endfor %}

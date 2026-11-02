@@ -1,37 +1,61 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ propiedad.titulo }}{% endblock %}
+{% block title %}{{ propiedad.titulo }} - Inmobiliaria Coquimbo{% endblock %}
 
 {% block content %}
-<div class="row my-5">
-    <div class="col-lg-8 mx-auto">
+<div class="row my-4">
+    <div class="col-lg-9 mx-auto">
         {% if propiedad %}
-            <div class="card shadow border-0">
-                <div class="card-body p-5">
-                    <span class="badge bg-primary fs-6 mb-3">{{ propiedad.tipo }}</span>
-                    <h1 class="card-title fw-bold text-dark mb-3">{{ propiedad.titulo }}</h1>
-                    <h3 class="text-success fw-bold mb-4">{{ propiedad.precio }}</h3>
-                    
-                    <hr class="my-4">
-                    
-                    <h5 class="fw-bold text-secondary mb-3">Descripción de la Propiedad</h5>
-                    <p class="card-text fs-5 text-muted lh-base mb-4">{{ propiedad.descripcion }}</p>
-                    
-                    <div class="row text-center bg-light p-3 rounded mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                        <div>
+                            <span class="badge bg-primary fs-6">{{ propiedad.tipo }}</span>
+                            {% if propiedad.zona %}
+                                <span class="badge bg-secondary fs-6">{{ propiedad.zona.nombre }}</span>
+                            {% endif %}
+                        </div>
+                        <h2 class="text-success fw-bold mb-0">{{ propiedad.precio }}</h2>
+                    </div>
+
+                    <h1 class="card-title fw-bold text-dark mb-4">{{ propiedad.titulo }}</h1>
+
+                    <div class="row text-center bg-light p-3 rounded mb-4 g-2">
                         <div class="col-6 border-end">
                             <span class="d-block text-muted small">Habitaciones</span>
-                            <span class="fs-4 fw-bold">{{ propiedad.habitaciones }}</span>
+                            <span class="fs-4 fw-bold text-dark">🛏️ {{ propiedad.habitaciones }}</span>
                         </div>
                         <div class="col-6">
                             <span class="d-block text-muted small">Baños</span>
-                            <span class="fs-4 fw-bold">{{ propiedad.banos }}</span>
+                            <span class="fs-4 fw-bold text-dark">🚿 {{ propiedad.banos }}</span>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-4">
+                    <h5 class="fw-bold text-secondary mb-2">Descripción de la Propiedad</h5>
+                    <p class="card-text fs-5 text-muted lh-base mb-4" style="white-space: pre-line;">{{ propiedad.descripcion }}</p>
+
+                    {% if propiedad.zona %}
+                    <div class="alert alert-light border mb-4">
+                        <h6 class="fw-bold mb-1">📍 Información del Sector / Zona: {{ propiedad.zona.nombre }}</h6>
+                        <p class="small text-muted mb-1">{{ propiedad.zona.destacado }}</p>
+                        <span class="badge bg-info text-dark">Nivel de Demanda: {{ propiedad.zona.nivel_demanda }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top flex-wrap gap-2">
                         <a href="{% url 'propiedades:lista' %}" class="btn btn-outline-secondary">
                             &larr; Volver al Catálogo
                         </a>
+                        {% if es_supervisor %}
+                        <div class="btn-group">
+                            <a href="{% url 'propiedades:editar' propiedad.id %}" class="btn btn-warning text-dark fw-bold">
+                                ✏️ Modificar
+                            </a>
+                            <a href="{% url 'propiedades:eliminar' propiedad.id %}" class="btn btn-danger fw-bold">
+                                🗑️ Eliminar
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -39,7 +63,6 @@
             <div class="alert alert-danger text-center p-5 shadow-sm" role="alert">
                 <h4 class="alert-heading fw-bold">Propiedad no encontrada</h4>
                 <p class="text-muted">Lo sentimos, la propiedad que buscas no existe o fue eliminada del catálogo.</p>
-                <hr>
                 <a href="{% url 'propiedades:lista' %}" class="btn btn-primary mt-2">Volver al Catálogo</a>
             </div>
         {% endif %}
