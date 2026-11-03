@@ -151,27 +151,17 @@ _use_ssl = os.environ.get('EMAIL_USE_SSL', 'false').lower() in ('true', '1') or 
 _use_tls = (os.environ.get('EMAIL_USE_TLS', 'true').lower() in ('true', '1')) and not _use_ssl
 
 if _email_user and _email_password:
-    MAILERS = {
-        'default': {
-            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
-            'OPTIONS': {
-                'host': os.environ.get('EMAIL_HOST', 'smtp.gmail.com'),
-                'port': _email_port,
-                'use_tls': _use_tls,
-                'use_ssl': _use_ssl,
-                'username': _email_user,
-                'password': _email_password,
-            }
-        }
-    }
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = _email_port
+    EMAIL_USE_SSL = _use_ssl
+    EMAIL_USE_TLS = _use_tls
+    EMAIL_HOST_USER = _email_user
+    EMAIL_HOST_PASSWORD = _email_password
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _email_user)
 else:
-    MAILERS = {
-        'default': {
-            'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-        },
-    }
-    DEFAULT_FROM_EMAIL = 'no-reply@inmobiliariacoquimbo.cl'
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'no-reply@inmobiliariacoquimbo.cl' 
 
 # Auth URLs
 LOGIN_URL = 'usuarios:login'
