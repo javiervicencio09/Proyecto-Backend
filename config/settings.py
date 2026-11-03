@@ -144,15 +144,30 @@ STATICFILES_DIRS = [
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+_email_user = os.environ.get('EMAIL_HOST_USER', '').strip()
+_email_password = os.environ.get('EMAIL_HOST_PASSWORD', '').strip()
 
-    },
-}
-
-
-DEFAULT_FROM_EMAIL = 'no-reply@inmobiliariacoquimbo.cl'
+if _email_user and _email_password:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+            'OPTIONS': {
+                'host': os.environ.get('EMAIL_HOST', 'smtp.gmail.com'),
+                'port': int(os.environ.get('EMAIL_PORT', 587)),
+                'use_tls': os.environ.get('EMAIL_USE_TLS', 'true').lower() in ('true', '1'),
+                'username': _email_user,
+                'password': _email_password,
+            }
+        }
+    }
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', _email_user)
+else:
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        },
+    }
+    DEFAULT_FROM_EMAIL = 'no-reply@inmobiliariacoquimbo.cl'
 
 # Auth URLs
 LOGIN_URL = 'usuarios:login'
