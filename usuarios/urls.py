@@ -17,9 +17,7 @@ urlpatterns = [
     path('gestion/crear/', views.crear_usuario, name='crear_usuario'),
     path('gestion/editar/<int:id_usuario>/', views.editar_usuario, name='editar_usuario'),
 
-    # Flujo de Recuperación de Contraseña por Correo (Tokens)
-    path('password_reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
-    path('password_reset/done/', views.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('reset/done/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    # Recuperación de Contraseña con Código de 5 Dígitos
+    path('password_reset/', views.solicitar_recuperacion_view, name='password_reset'),
+    path('password_reset/codigo/', views.verificar_codigo_view, name='password_reset_codigo'),
 ]

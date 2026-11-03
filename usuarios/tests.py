@@ -2,9 +2,6 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User, Group
 from django.core import mail
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
 
 class AutenticacionYRolesTestCase(TestCase):
     def setUp(self):
@@ -89,37 +86,54 @@ class AutenticacionYRolesTestCase(TestCase):
         self.assertRedirects(response, reverse('usuarios:dashboard_supervisor'))
         self.assertContains(response, 'Acceso denegado')
 
-    # --- Pruebas de Recuperación de Contraseña (Email + Token) ---
-    def test_solicitud_recuperacion_contrasena_envia_correo(self):
+    # --- Pruebas de Recuperación de Contraseña con Código de 5 Dígitos ---
+    def test_solicitud_recuperacion_envia_codigo_de_5_digitos(self):
         response = self.client.post(
             reverse('usuarios:password_reset'),
             {'email': 'supervisor@correo.cl'},
             follow=True
         )
         self.assertEqual(response.status_code, 200)
-        self.assertRedirects(response, reverse('usuarios:password_reset_done'))
-        self.assertContains(response, '¡Enlace Enviado!')
+        self.assertRedirects(response, reverse('usuarios:password_reset_codigo'))
+        self.assertContains(response, 'Ingresa tu Código de Seguridad')
+
+        # Verificar que se envió un correo
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn('Recuperación de contraseña', mail.outbox[0].subject)
+        # Verificar que el código tiene 5 dígitos
+        session = self.client.session
+        codigo = session.get('reset_code')
+        self.assertIsNotNone(codigo)
+        self.assertEqual(len(codigo), 5)
+        self.assertIn(codigo, mail.outbox[0].body)
 
-    def test_confirmacion_cambio_clave_con_token(self):
-        uid = urlsafe_base64_encode(force_bytes(self.user_supervisor.pk))
-        token = default_token_generator.make_token(self.user_supervisor)
+    def test_verificar_codigo_correcto_cambia_password(self):
+        # 1. Solicitar código
+        self.client.post(reverse('usuarios:password_reset'), {'email': 'supervisor@correo.cl'})
+        codigo = self.client.session.get('reset_code')
 
-        url_confirm = reverse('usuarios:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
-        response = self.client.get(url_confirm, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Establecer Nueva Contraseña')
-
-        # Establecer la nueva contraseña en la URL redirigida sin token visible
-        url_formulario = response.redirect_chain[0][0]
-        response_post = self.client.post(url_formulario, {
+        # 2. Enviar código y nueva clave
+        response = self.client.post(reverse('usuarios:password_reset_codigo'), {
+            'codigo': codigo,
             'new_password1': 'nuevaClaveSuper456',
             'new_password2': 'nuevaClaveSuper456',
         }, follow=True)
-        self.assertEqual(response_post.status_code, 200)
-        self.assertRedirects(response_post, reverse('usuarios:password_reset_complete'))
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse('usuarios:login'))
+        self.assertContains(response, '¡Tu contraseña ha sido restablecida con éxito!')
 
-        # Probar que puede loguearse con la nueva contraseña
+        # 3. Probar inicio de sesión con nueva contraseña
         login_exitoso = self.client.login(username='supervisor_test', password='nuevaClaveSuper456')
         self.assertTrue(login_exitoso)
+
+    def test_verificar_codigo_incorrecto_muestra_error(self):
+        # 1. Solicitar código
+        self.client.post(reverse('usuarios:password_reset'), {'email': 'supervisor@correo.cl'})
+
+        # 2. Enviar código erróneo
+        response = self.client.post(reverse('usuarios:password_reset_codigo'), {
+            'codigo': '99999',
+            'new_password1': 'nuevaClaveSuper456',
+            'new_password2': 'nuevaClaveSuper456',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'El código de 5 dígitos ingresado es incorrecto.')

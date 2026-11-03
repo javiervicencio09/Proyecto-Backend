@@ -1,18 +1,21 @@
+import random
+from datetime import timedelta
+from django.utils import timezone
+from django.conf import settings
+from django.core.mail import send_mail
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import views as auth_views
 from django.db.models import Q
 
 from propiedades.models import Propiedad
 from zonas.models import Zona
 from .forms import (
     CustomLoginForm,
-    CustomPasswordResetForm,
-    CustomSetPasswordForm,
+    SolicitarCodigoResetForm,
+    VerificarCodigoPasswordForm,
     UsuarioCreacionForm,
     UsuarioEdicionForm
 )
@@ -154,24 +157,103 @@ def editar_usuario(request, id_usuario):
         'usuario_obj': usuario_obj
     })
 
-# ==========================================
-# RECUPERACIÓN DE CONTRASEÑA (EMAIL + TOKEN)
-# ==========================================
+# ========================================================
+# RECUPERACIÓN DE CONTRASEÑA CON CÓDIGO DE 5 DÍGITOS (OTP)
+# ========================================================
 
-class CustomPasswordResetView(auth_views.PasswordResetView):
-    form_class = CustomPasswordResetForm
-    template_name = 'usuarios/password_reset.html'
-    email_template_name = 'usuarios/password_reset_email.html'
-    subject_template_name = 'usuarios/password_reset_subject.txt'
-    success_url = reverse_lazy('usuarios:password_reset_done')
+def solicitar_recuperacion_view(request):
+    if request.method == 'POST':
+        form = SolicitarCodigoResetForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email'].strip().lower()
+            user = User.objects.filter(email__iexact=email).first()
 
-class CustomPasswordResetDoneView(auth_views.PasswordResetDoneView):
-    template_name = 'usuarios/password_reset_done.html'
+            if user:
+                # Generar código numérico de 5 dígitos
+                codigo = f"{random.randint(10000, 99999)}"
+                request.session['reset_code'] = codigo
+                request.session['reset_user_id'] = user.id
+                request.session['reset_email'] = user.email
+                request.session['reset_expires'] = (timezone.now() + timedelta(minutes=15)).timestamp()
 
-class CustomPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
-    form_class = CustomSetPasswordForm
-    template_name = 'usuarios/password_reset_confirm.html'
-    success_url = reverse_lazy('usuarios:password_reset_complete')
+                # Enviar correo con el código
+                try:
+                    send_mail(
+                        subject=f"Código de seguridad: {codigo} - Portal Inmobiliario Coquimbo",
+                        message=f"""Hola {user.first_name or user.username},
 
-class CustomPasswordResetCompleteView(auth_views.PasswordResetCompleteView):
-    template_name = 'usuarios/password_reset_complete.html'
+Has solicitado restablecer tu contraseña en el Portal Inmobiliario Coquimbo.
+
+Tu código de verificación de 5 dígitos es:
+===========================
+      {codigo}
+===========================
+
+Ingresa este código en tu pantalla para definir tu nueva contraseña.
+Este código es válido durante 15 minutos.
+
+Si tú no realizaste esta solicitud, puedes ignorar este mensaje; tu contraseña actual continuará siendo la misma.
+
+Atentamente,
+Equipo de Soporte - Portal Inmobiliario Coquimbo""",
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=False,
+                    )
+                    messages.success(
+                        request,
+                        f"¡Código de 5 dígitos enviado a {user.email}! Ingrésalo a continuación."
+                    )
+                    return redirect('usuarios:password_reset_codigo')
+                except Exception as e:
+                    messages.error(request, f"No se pudo enviar el correo: {e}")
+            else:
+                messages.error(request, "No se encontró ninguna cuenta asociada a ese correo electrónico.")
+    else:
+        form = SolicitarCodigoResetForm()
+
+    return render(request, 'usuarios/password_reset.html', {'form': form})
+
+def verificar_codigo_view(request):
+    # Validar que exista una solicitud previa en sesión
+    if not request.session.get('reset_code') or not request.session.get('reset_user_id'):
+        messages.warning(request, "Por favor solicita un código de recuperación primero.")
+        return redirect('usuarios:password_reset')
+
+    email_destino = request.session.get('reset_email', '')
+
+    if request.method == 'POST':
+        form = VerificarCodigoPasswordForm(request.POST)
+        if form.is_valid():
+            codigo_ingresado = form.cleaned_data['codigo'].strip()
+            codigo_sesion = request.session.get('reset_code')
+            expiracion = request.session.get('reset_expires', 0)
+
+            # 1. Validar si expiró (15 minutos)
+            if timezone.now().timestamp() > expiracion:
+                messages.error(request, "El código ha expirado. Por favor solicita uno nuevo.")
+                return redirect('usuarios:password_reset')
+
+            # 2. Validar coincidencia de código
+            if codigo_ingresado != codigo_sesion:
+                form.add_error('codigo', "El código de 5 dígitos ingresado es incorrecto.")
+            else:
+                # Código válido -> Cambiar contraseña
+                user = get_object_or_404(User, id=request.session['reset_user_id'])
+                user.set_password(form.cleaned_data['new_password1'])
+                user.save()
+
+                # Limpiar sesión
+                for key in ['reset_code', 'reset_user_id', 'reset_email', 'reset_expires']:
+                    if key in request.session:
+                        del request.session[key]
+
+                messages.success(request, "¡Tu contraseña ha sido restablecida con éxito! Ya puedes iniciar sesión.")
+                return redirect('usuarios:login')
+    else:
+        form = VerificarCodigoPasswordForm()
+
+    return render(request, 'usuarios/password_reset_codigo.html', {
+        'form': form,
+        'email_destino': email_destino
+    })

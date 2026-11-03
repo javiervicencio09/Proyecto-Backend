@@ -1,10 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from django.contrib.auth.forms import (
-    AuthenticationForm,
-    PasswordResetForm,
-    SetPasswordForm
-)
+from django.contrib.auth.forms import AuthenticationForm
 
 ROLES_CHOICES = [
     ('Administrador', 'Administrador (Acceso total)'),
@@ -30,7 +26,7 @@ class CustomLoginForm(AuthenticationForm):
     )
 
 
-class CustomPasswordResetForm(PasswordResetForm):
+class SolicitarCodigoResetForm(forms.Form):
     email = forms.EmailField(
         label="Correo Electrónico Registrado",
         widget=forms.EmailInput(attrs={
@@ -41,11 +37,45 @@ class CustomPasswordResetForm(PasswordResetForm):
     )
 
 
-class CustomSetPasswordForm(SetPasswordForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({'class': 'form-control'})
+class VerificarCodigoPasswordForm(forms.Form):
+    codigo = forms.CharField(
+        label="Código de Seguridad (5 dígitos)",
+        max_length=5,
+        min_length=5,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-lg text-center fw-bold fs-3',
+            'placeholder': '12345',
+            'style': 'letter-spacing: 6px;',
+            'autofocus': True,
+            'maxlength': '5',
+            'autocomplete': 'off',
+        })
+    )
+    new_password1 = forms.CharField(
+        label="Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Mínimo 8 caracteres'
+        })
+    )
+    new_password2 = forms.CharField(
+        label="Confirmar Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Repite la nueva contraseña'
+        })
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        p1 = cleaned_data.get('new_password1')
+        p2 = cleaned_data.get('new_password2')
+
+        if p1 and p2 and p1 != p2:
+            self.add_error('new_password2', "Las contraseñas no coinciden.")
+        if p1 and len(p1) < 8:
+            self.add_error('new_password1', "La contraseña debe tener al menos 8 caracteres.")
+        return cleaned_data
 
 
 class UsuarioCreacionForm(forms.ModelForm):
