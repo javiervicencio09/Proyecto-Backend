@@ -146,6 +146,9 @@ STATICFILES_DIRS = [
 
 _email_user = os.environ.get('EMAIL_HOST_USER', '').strip()
 _email_password = os.environ.get('EMAIL_HOST_PASSWORD', '').strip()
+_email_port = int(os.environ.get('EMAIL_PORT', 587))
+_use_ssl = os.environ.get('EMAIL_USE_SSL', 'false').lower() in ('true', '1') or _email_port == 465
+_use_tls = (os.environ.get('EMAIL_USE_TLS', 'true').lower() in ('true', '1')) and not _use_ssl
 
 if _email_user and _email_password:
     MAILERS = {
@@ -153,8 +156,9 @@ if _email_user and _email_password:
             'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
             'OPTIONS': {
                 'host': os.environ.get('EMAIL_HOST', 'smtp.gmail.com'),
-                'port': int(os.environ.get('EMAIL_PORT', 587)),
-                'use_tls': os.environ.get('EMAIL_USE_TLS', 'true').lower() in ('true', '1'),
+                'port': _email_port,
+                'use_tls': _use_tls,
+                'use_ssl': _use_ssl,
                 'username': _email_user,
                 'password': _email_password,
             }

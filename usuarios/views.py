@@ -175,6 +175,7 @@ def solicitar_recuperacion_view(request):
                 request.session['reset_user_id'] = user.id
                 request.session['reset_email'] = user.email
                 request.session['reset_expires'] = (timezone.now() + timedelta(minutes=15)).timestamp()
+                print(f"[SEGURIDAD] CODIGO DE RECUPERACION PARA {user.email}: {codigo}")
 
                 # Enviar correo con el código
                 try:
